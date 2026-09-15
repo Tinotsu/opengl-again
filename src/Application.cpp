@@ -5,6 +5,8 @@
 #include <glad/glad.h>
 #include <iostream>
 
+#include "Shader.h"
+
 #include "glm/glm.hpp"
 #include "glm/gtc/matrix_transform.hpp"
 
@@ -42,85 +44,22 @@ int main(void) {
 
     /* Vertex Shader */
 
-    const char *vertexShaderSource = R"(
-        #version 330 core
-        layout (location = 0) in vec3 aPos;
-
-        void main()
-        {
-            gl_Position = vec4(aPos.x , aPos.y, aPos.z, 1.0);
-        }
-    )";
-
-    unsigned int vertexShader;
-    vertexShader = glCreateShader(GL_VERTEX_SHADER);
-    glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
-    glCompileShader(vertexShader);
-
-    int success;
-    char infoLog[512];
-    glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
-    if (!success) {
-        glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
-        std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n"
-                  << infoLog << std::endl;
-    }
-
-    /* Fragment Shader */
-
-    const char *fragmentShaderSource = R"(
-        #version 330 core
-        out vec4 FragColor;
-
-        void main()
-        {
-            FragColor = vec4(0.0f, 0.3f, 1.0f, 1.0f);
-        }
-    )";
-
-    unsigned int fragmentShader;
-    fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
-    glCompileShader(fragmentShader);
-
-    glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
-    if (!success) {
-        glGetShaderInfoLog(fragmentShader, 512, NULL, infoLog);
-        std::cout << "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n"
-                  << infoLog << std::endl;
-    }
-
-    /* Shader Program */
-
-    unsigned int shaderProgram;
-    shaderProgram = glCreateProgram();
-
-    glAttachShader(shaderProgram, vertexShader);
-    glAttachShader(shaderProgram, fragmentShader);
-    glLinkProgram(shaderProgram);
-
-    glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
-    if (!success) {
-        glGetProgramInfoLog(shaderProgram, 512, NULL, infoLog);
-        std::cout << "ERROR::SHADER::PROGRAM::COMPILATION_FAILED\n"
-                  << infoLog << std::endl;
-    }
-
-    glDeleteShader(vertexShader);
-    glDeleteShader(fragmentShader);
+    Shader ourShader("res/shaders/Vertex.shader",
+                     "res/shaders/Fragment.shader");
 
     /* Vertecies */
 
     float vertices[] = {
-        -0.5f, -0.5f, 0.0f, // 1
-        0.5f,  -0.5f, 0.0f, // 2
-        0.0f,  0.5f,  0.0f  // 3
+        // positions                        // colors
+        0.5f,  -0.5f, 0.0f, 1.0f, 0.0f, 0.0f, // bottom right
+        -0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, // bottom left
+        0.0f,  0.5f,  0.0f, 0.0f, 0.0f, 1.0f  // top
     };
 
     float verticesB[] = {
-        0.5f,  0.5f, 0.0f, // 1
-        1.0f,  0.5f, 0.0f, // 2
-        0.75f, 1.0f, 0.0f  // 3
+        0.5f,  0.5f, 0.0f, 1.0f, 0.0f, 0.0f, // bottom right
+        1.0f,  0.5f, 0.0f, 0.0f, 1.0f, 0.0f, // bottom left
+        0.75f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f  // top
     };
 
     unsigned int VBOB;
@@ -138,18 +77,24 @@ int main(void) {
     glBindVertexArray(VAO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float),
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float),
                           (void *)0);
     glEnableVertexAttribArray(0);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float),
+                          (void *)(3 * sizeof(float)));
+    glEnableVertexAttribArray(1);
 
     //
 
     glBindVertexArray(VAOB);
     glBindBuffer(GL_ARRAY_BUFFER, VBOB);
     glBufferData(GL_ARRAY_BUFFER, sizeof(verticesB), verticesB, GL_STATIC_DRAW);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float),
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float),
                           (void *)0);
     glEnableVertexAttribArray(0);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float),
+                          (void *)(3 * sizeof(float)));
+    glEnableVertexAttribArray(1);
 
     /* Main Loop */
 
@@ -162,7 +107,8 @@ int main(void) {
         glClear(GL_COLOR_BUFFER_BIT);
 
         // Draw
-        glUseProgram(shaderProgram);
+
+        ourShader.use();
 
         glBindVertexArray(VAO);
         glDrawArrays(GL_TRIANGLES, 0, 3);
