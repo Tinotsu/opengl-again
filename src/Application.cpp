@@ -1,9 +1,11 @@
+#include "glm/ext/matrix_transform.hpp"
 #include "imgui.h"
 #define GL_SILENCE_DEPRECATION
 #define GLFW_INCLUDE_NONE
 #include "stb_image.h"
 #include <GLFW/glfw3.h>
 #include <glad/glad.h>
+#include <glm/gtc/type_ptr.hpp>
 #include <iostream>
 
 #include "Shader.h"
@@ -71,14 +73,12 @@ int main(void) {
 
     unsigned int VBO, VAO, EBO;
     unsigned int VBOB, VAOB, EBOB;
-    glGenVertexArrays(1, &VAO);
-    glGenVertexArrays(1, &VAOB);
-    glGenBuffers(1, &VBO);
-    glGenBuffers(1, &VBOB);
-    glGenBuffers(1, &EBO);
-    glGenBuffers(1, &EBOB);
 
     //
+
+    glGenVertexArrays(1, &VAO);
+    glGenBuffers(1, &VBO);
+    glGenBuffers(1, &EBO);
 
     glBindVertexArray(VAO);
 
@@ -100,6 +100,10 @@ int main(void) {
     glEnableVertexAttribArray(2);
 
     //
+
+    glGenVertexArrays(1, &VAOB);
+    glGenBuffers(1, &VBOB);
+    glGenBuffers(1, &EBOB);
 
     glBindVertexArray(VAOB);
 
@@ -153,6 +157,16 @@ int main(void) {
         // rendering commands here
         glClearColor(1.0f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
+
+        /* Transformation */
+
+        glm::mat4 trans = glm::mat4(1.0f);
+        trans = glm::translate(trans, glm::vec3(0.5f, -0.5f, 0.0f));
+        trans =
+            glm::rotate(trans, (float)glfwGetTime(), glm::vec3(0.0, 0.0, 1.0));
+        unsigned int transformLoc =
+            glGetUniformLocation(ourShader.ID, "transform");
+        glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(trans));
 
         // Draw
 
